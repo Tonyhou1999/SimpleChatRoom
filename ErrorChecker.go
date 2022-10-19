@@ -10,3 +10,9 @@ func check(err error, message string) {
 		fmt.Println(message)
 	}
 }
+
+func checkPanic(err error, message string) {
+	if err != nil {
+		panic(message)
+	}
+}
