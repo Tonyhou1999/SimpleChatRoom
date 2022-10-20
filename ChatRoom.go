@@ -1,5 +1,7 @@
 package SimpleChatRoom
 
+// This file is used to create a chatroom that supports the messaging
+
 import (
 	"encoding/gob"
 	"fmt"
@@ -9,6 +11,24 @@ import (
 
 var messageQueue chan Message
 var connSlice map[string]net.Conn
+var encodeSlice map[string]*gob.Encoder //so don't create a new encoder each time
+
+func SendErr(myMessage Message) {
+	conn, ok := connSlice[myMessage.From]
+	if !ok {
+		fmt.Println("Unable to send error message back to " + myMessage.From)
+	}
+	//still using gob so can perhaps detect an error
+	encoder, ok := encodeSlice[myMessage.To]
+	if !ok {
+		encoder = gob.NewEncoder(conn)
+		encodeSlice[myMessage.To] = encoder
+	}
+	err := encoder.Encode("Unable to send message to " + myMessage.To)
+	if err != nil {
+		fmt.Println("Unable to send error message back to " + myMessage.From)
+	}
+}
 
 func SendMessage() {
 	var myMessage Message
@@ -17,23 +37,34 @@ func SendMessage() {
 		//todo make sure dont have to error check that myMessage.To will return non-nil
 		conn, ok := connSlice[myMessage.To]
 		if !ok {
-			//send err
-		}
-		encoder := gob.NewEncoder(conn)
-		err := encoder.Encode(myMessage)
-		if err != nil {
-			delete(connSlice, myMessage.To)
-			//send err
+			SendErr(myMessage)
+			continue
+		} else {
+			encoder, ok := encodeSlice[myMessage.To]
+			if !ok {
+				encoder = gob.NewEncoder(conn)
+				encodeSlice[myMessage.To] = encoder
+			}
+			err := encoder.Encode(myMessage)
+			if err != nil {
+				delete(connSlice, myMessage.To)
+				delete(encodeSlice, myMessage.To)
+				SendErr(myMessage)
+				continue
+			}
 		}
 	}
 }
 
-// This file is used to create a chatroom that supports the messaging
 func ClientThread(conn net.Conn) {
 	var myMessage Message
 	for {
 		decoder := gob.NewDecoder(conn)
-		decoder.Decode(&myMessage)
+		err := decoder.Decode(&myMessage)
+		if err != nil {
+			myMessage = Message{} //since we don't know the From
+			SendErr(myMessage)
+		}
 		messageQueue <- myMessage
 	}
 }
