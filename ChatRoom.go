@@ -62,7 +62,7 @@ func ClientThread(conn net.Conn) {
 		decoder := gob.NewDecoder(conn)
 		err := decoder.Decode(&myMessage)
 		if err != nil {
-			myMessage = Message{} //since we don't know the From
+			myMessage = Message{} //since we don't know where the message is From
 			SendErr(myMessage)
 		}
 		messageQueue <- myMessage
