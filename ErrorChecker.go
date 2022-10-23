@@ -1,4 +1,4 @@
-package SimpleChatRoom
+package main
 
 import "fmt"
 

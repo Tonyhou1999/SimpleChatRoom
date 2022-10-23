@@ -1,8 +1,9 @@
-package SimpleChatRoom
+package main
 
 // This file is used to create a chatroom that supports the messaging
 
 import (
+	. "SimpleChatRoom/pkg/message"
 	"encoding/gob"
 	"fmt"
 	"net"
@@ -76,6 +77,7 @@ func EstablishConnection(InputPort string) {
 	ConnectionError := "The provided Port Number is incorrect, please try again"
 	check(error, ConnectionError) //Here's the error checking part
 	fmt.Println("Successful Establishment on Connecting Via Port" + Port + " is successful")
+	go SendMessage()
 	defer listener.Close()
 	for {
 		connection, error := listener.Accept()

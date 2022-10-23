@@ -1,4 +1,4 @@
-package SimpleChatRoom
+package main
 
 import (
 	"bufio"
@@ -11,7 +11,7 @@ import (
 */
 
 // Getting the designed port in order for a successful establishment of ChatRoom, used for the EstablishConnection in ChatRoom.go file
-func initialization(Port string) {
+func initialization(Port string) string {
 	if len(os.Args) != 2 {
 		panic("The provided input port message is not correct, enter in the format \"go run main.go Port \" ")
 	}

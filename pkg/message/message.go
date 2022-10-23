@@ -1,4 +1,4 @@
-package SimpleChatRoom
+package message
 
 // required by the instruction, a message of this format will be created
 
