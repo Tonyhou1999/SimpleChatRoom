@@ -76,7 +76,7 @@ func EstablishConnection(InputPort string) {
 	listener, err := net.Listen("tcp", Port)
 	ConnectionError := "The provided Port Number is incorrect, please try again"
 	check(err, ConnectionError) //Here's the error checking part
-	fmt.Println("Successful Establishment on Connecting Via Port" + Port + " is successful")
+	fmt.Println("Successfully started listening on port" + Port)
 	go SendMessage()
 	defer listener.Close()
 	for {
