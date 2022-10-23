@@ -1,4 +1,4 @@
-package message
+package main
 
 // required by the instruction, a message of this format will be created
 

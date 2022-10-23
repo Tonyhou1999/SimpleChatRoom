@@ -3,7 +3,7 @@ package main
 // This file is used to create a chatroom that supports the messaging
 
 import (
-	. "SimpleChatRoom/pkg/message"
+	"bufio"
 	"encoding/gob"
 	"fmt"
 	"net"
@@ -73,9 +73,9 @@ func ClientThread(conn net.Conn) {
 // EstablishConnection refers to the TCP structure that starts building the TCP connection via the port
 func EstablishConnection(InputPort string) {
 	Port := ":" + InputPort
-	listener, error := net.Listen("tcp", Port)
+	listener, err := net.Listen("tcp", Port)
 	ConnectionError := "The provided Port Number is incorrect, please try again"
-	check(error, ConnectionError) //Here's the error checking part
+	check(err, ConnectionError) //Here's the error checking part
 	fmt.Println("Successful Establishment on Connecting Via Port" + Port + " is successful")
 	go SendMessage()
 	defer listener.Close()
@@ -87,9 +87,22 @@ func EstablishConnection(InputPort string) {
 	}
 }
 
+func waitForEnd() {
+	scanner := bufio.NewScanner(os.Stdin)
+	for {
+		fmt.Println("Type \"EXIT\" to close the chatroom")
+		scanner.Scan()
+		if scanner.Text() == "EXIT" {
+			fmt.Println("Chatroom will be terminated shortly")
+			os.Exit(0)
+		}
+	}
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		panic("Incorrect args: should be ./[PROGNAME] port")
 	}
-	EstablishConnection(os.Args[1])
+	go EstablishConnection(os.Args[1])
+	waitForEnd()
 }
