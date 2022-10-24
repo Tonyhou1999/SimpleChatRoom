@@ -25,6 +25,12 @@ func ConnectToChatRoom(port string, username string) {
 
 }
 
+func sendMessage(conn net.Conn, message Message) {
+	encoder := gob.NewEncoder(conn)
+	err := encoder.Encode(message)
+	check(err, "Message was not sent to the server")
+}
+
 // This function is designed to receive the actual message from the server, to the client
 // It will print out the message received from the server
 func receiveMessage(conn net.Conn, username string, message Message) {
