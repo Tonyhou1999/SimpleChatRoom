@@ -47,15 +47,14 @@ func MessageCreation(username string) (message Message) {
 	return
 }
 
-func ConnectToChatRoom(port string, username string) net.Conn {
-	Port := ":" + port
-	connection, err := net.Dial("tcp", Port)
-	ConnectionError := "The provided Port Number is incorrect, please try again"
-	Check(err, ConnectionError) //Make sure it is a valid port number, i.e, the destination chatroom, exists
+func ConnectToChatRoom(address string, username string) net.Conn {
+	connection, err := net.Dial("tcp", address)
+	ConnectionError := "Not able to connect to the provided address, double check your address"
+	CheckPanic(err, ConnectionError) //Make sure it is a valid port number, i.e, the destination chatroom, exists
 	UserInfo := Message{To: "chatroom", From: username, MessageContent: ""}
 	encoder := gob.NewEncoder(connection)
 	encoder.Encode(UserInfo)
-	fmt.Printf("Current Client has been successfully registered, username:%s, port, %s", username, port)
+	fmt.Printf("Current Client has been successfully registered, username:%s, address:%s", username, address)
 	defer connection.Close()
 	return connection
 }
@@ -68,7 +67,8 @@ func sendMessage(conn net.Conn, message Message) {
 
 // This function is designed to receive the actual message from the server, to the client
 // It will print out the message received from the server
-func receiveMessage(conn net.Conn, username string, message Message) {
+func receiveMessage(conn net.Conn, username string) {
+	var message Message
 	for {
 		decoder := gob.NewDecoder(conn)
 		err := decoder.Decode(message)
@@ -84,7 +84,7 @@ func receiveMessage(conn net.Conn, username string, message Message) {
 }
 
 func main() {
-	//Command Line inputs to gather client information
+	//Command Line arguments to gather client information
 	port, username := UserInitialization()
 	//send the client information to the actual server
 	Connection := ConnectToChatRoom(port, username)
@@ -97,5 +97,4 @@ func main() {
 		message := MessageCreation(username)
 		go sendMessage(Connection, message)
 	}
-
 }

@@ -137,7 +137,7 @@ func waitForEnd() {
 
 func main() {
 	if len(os.Args) < 2 {
-		panic("Incorrect args: should be ./[PROGNAME] port")
+		panic("Incorrect args: should be ./[PROGNAME] PORT")
 	}
 	go establishConnection(os.Args[1])
 	waitForEnd()
