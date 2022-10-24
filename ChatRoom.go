@@ -13,7 +13,7 @@ import (
 	"sync"
 )
 
-var messageQueue chan Message
+var messageQueue chan Message = make(chan Message, 5)
 
 // todo make sure mutex makes sense, theres a lot of cases where we add/remove
 var mutex sync.Mutex
@@ -45,6 +45,7 @@ func SendMessage() {
 	for {
 		myMessage = <-messageQueue
 		//todo make sure dont have to error check that myMessage.To will return non-nil
+		fmt.Println("Sending message of ", myMessage)
 		conn, ok := connSlice[myMessage.To]
 		if !ok {
 			sendErr(myMessage)
@@ -105,14 +106,18 @@ func ClientThread(conn net.Conn) {
 	_, ok := connSlice[username]
 	for ok != false {
 		err := decoder.Decode(&myMessage)
+		fmt.Println("whee")
 		if err != nil && err != io.EOF {
 			myMessage = Message{} //since we don't know where the message is From
+			fmt.Println("Err here:", err)
 			sendErr(myMessage)
-			continue
+		} else {
+			fmt.Println("Got message of:\n", myMessage)
+			messageQueue <- myMessage
 		}
-		messageQueue <- myMessage
 		_, ok = connSlice[username]
 	}
+	fmt.Println("Closed connection with", username)
 }
 
 // establishConnection refers to the TCP structure that starts building the TCP connection via the port

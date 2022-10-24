@@ -8,6 +8,11 @@ type Message struct {
 	MessageContent string
 }
 
+func (m Message) String() string {
+	//todo error check for nil
+	return fmt.Sprintf("To: %s\nFrom: %s\nMessage: %s", m.To, m.From, m.MessageContent)
+}
+
 func Check(err error, message string) {
 	if err != nil {
 		fmt.Println(message)
