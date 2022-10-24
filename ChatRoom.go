@@ -57,14 +57,43 @@ func SendMessage() {
 	}
 }
 
+func getUsername(conn net.Conn, decoder *gob.Decoder) {
+	var myMessage Message
+	myEncoder := gob.NewEncoder(conn)
+	for {
+		err := decoder.Decode(&myMessage)
+		if err != nil {
+			errMessage := Message{myMessage.From, "chatroom",
+				"Unable to parse message, please try again"}
+			myEncoder.Encode(errMessage)
+		}
+		if myMessage.To != "chatroom" {
+			errMessage := Message{myMessage.From, "chatroom",
+				"Please input a username, by sending a message to \"chatroom\" with a unique username"}
+			myEncoder.Encode(errMessage)
+		}
+		_, hasVal := encodeSlice[myMessage.To]
+		if hasVal {
+			errMessage := Message{myMessage.From, "chatroom",
+				"The username:\"" + myMessage.From + "\"is already taken, try another username"}
+			myEncoder.Encode(errMessage)
+		}
+		encodeSlice[myMessage.From] = myEncoder
+		connSlice[myMessage.From] = conn
+		return
+	}
+}
+
 func ClientThread(conn net.Conn) {
 	var myMessage Message
+	decoder := gob.NewDecoder(conn)
+	getUsername(conn, decoder)
 	for {
-		decoder := gob.NewDecoder(conn)
 		err := decoder.Decode(&myMessage)
 		if err != nil {
 			myMessage = Message{} //since we don't know where the message is From
 			SendErr(myMessage)
+			continue
 		}
 		messageQueue <- myMessage
 	}
