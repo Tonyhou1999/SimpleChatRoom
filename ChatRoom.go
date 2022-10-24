@@ -108,7 +108,7 @@ func ClientThread(conn net.Conn) {
 
 // establishConnection refers to the TCP structure that starts building the TCP connection via the port
 func establishConnection(InputPort string) {
-	Port := ":" + InputPort
+	Port := "127.0.0.1:" + InputPort
 	listener, err := net.Listen("tcp4", Port)
 	ConnectionError := "The provided Port Number is incorrect, exiting"
 	CheckPanic(err, ConnectionError) //Here's the error checking part

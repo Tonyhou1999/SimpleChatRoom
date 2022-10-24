@@ -18,7 +18,7 @@ and send the client's username tothe server
 
 func UserInitialization() (chatroom string, username string) {
 	if len(os.Args) != 3 {
-		panic("The input is not correctly formatted. Type \"go run main.go [chatroom number] [your desired username]\"")
+		panic("The input is not correctly formatted. Type \"go run Client.go [chatroom number] [your desired username]\"")
 	}
 	//Now we need to check if the username is some reserved keywords. such as chatroom will be prohibited
 	if strings.ToLower(os.Args[1]) == "chatroom" {
@@ -89,7 +89,7 @@ func main() {
 	//send the client information to the actual server
 	Connection := ConnectToChatRoom(port, username)
 	go receiveMessage(Connection, username)
-	fmt.Println("Input of each field of message should be read on seperate lines." +
+	fmt.Println("Input of each field of message should be read on separate lines." +
 		"Enter \"EXIT \" to terminate the running")
 	//The for loop will read the user input on each field of the message content
 	//Will terminate in desired behavior
