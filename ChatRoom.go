@@ -93,6 +93,9 @@ func getUsername(conn net.Conn, decoder *gob.Decoder) string {
 			myEncoder.Encode(errMessage)
 			continue
 		}
+		successMessage := Message{To: myMessage.From, From: "chatroom", MessageContent: "USERNAME ACCEPTED"}
+		err = myEncoder.Encode(successMessage)
+		Check(err, "Unable to encode to client while negotiating username")
 		mutex.Lock()
 		encodeSlice[myMessage.From] = myEncoder
 		connSlice[myMessage.From] = conn

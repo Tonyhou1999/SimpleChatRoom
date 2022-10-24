@@ -18,6 +18,7 @@ and send the client's username tothe server
 */
 
 var encoder *gob.Encoder
+var decoder *gob.Decoder
 
 func UserInitialization() (chatroom string, username string) {
 	if len(os.Args) != 3 {
@@ -39,6 +40,7 @@ func getInput(field string) (obtained string) {
 	obtained = scanner.Text()
 	return
 }
+
 func MessageCreation(username string) (message Message) {
 	to := getInput("To: ")
 	info := getInput("Message: ")
@@ -54,9 +56,23 @@ func ConnectToChatRoom(address string, username string) net.Conn {
 	connection, err := net.Dial("tcp", address)
 	ConnectionError := "Not able to connect to the provided address, double check your address"
 	CheckPanic(err, ConnectionError) //Make sure it is a valid port number, i.e, the destination chatroom, exists
-	UserInfo := Message{To: "chatroom", From: username, MessageContent: ""}
 	encoder = gob.NewEncoder(connection)
-	encoder.Encode(UserInfo)
+	decoder = gob.NewDecoder(connection)
+	for {
+		UserInfo := Message{To: "chatroom", From: username, MessageContent: ""}
+		encoder.Encode(UserInfo)
+		err := decoder.Decode(&UserInfo)
+		Check(err, "Unable to receive response from server")
+		if err != nil {
+			fmt.Println()
+		}
+		if UserInfo.MessageContent == "USERNAME ACCEPTED" {
+			break
+		} else {
+			fmt.Println("Username was not accepted, please choose a different one")
+			username = getInput("Username: ")
+		}
+	}
 	fmt.Printf("Current Client has been successfully registered, username:%s, address:%s\n", username, address)
 	return connection
 }
@@ -70,7 +86,6 @@ func sendMessage(encoder *gob.Encoder, message Message) {
 // It will print out the message received from the server
 func receiveMessage(conn net.Conn, username string) {
 	var message Message
-	decoder := gob.NewDecoder(conn)
 	for {
 		err := decoder.Decode(&message)
 		Check(err, "Server has closed")
