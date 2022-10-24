@@ -2,15 +2,17 @@
 The goal is to create a simple chat room that supports private messages between two users, allowing for many users to be connected to the server at the same time.
 
 ## Running Instruction
-To compile the ChatRoom code, do 
-```go build ChatRoom.go```
+- To officiall start, first will run ```chatRoom.go``` to establish the server. Then in a seperate terminal, run ```client.go```. In order to see it is fully functional, it is suggested to run at least 2 ```client.go``` in 2 seperate terminals(so you can see this is a simulated function of the chatroom)
 
-To compile the Client code, do ```go build Client.go```
+- Here are the specific instruction on running each of the file
+   - To run the ChatRoom code, do   ```go build ChatRoom.go```, this will generated an executable file in the directory
+   - To compile the Client code, do ```go build Client.go```, this will generate an executable file in the directory, likewise.
 
 To run the ChatRoom, do ```./ChatRoom PORT```, where PORT is a valid port number. 
 
 The server will then start up. To close the server, type "EXIT"
-To run the Client, do ```./Client ADDRESS PORT USERNAME```, where ADDRESS is the address of the server, PORT is the port the server is on, and USERNAME is the desired username for the server. 
+
+To run the Client, do ```./Client ADDRESS PORT USERNAME```, where ADDRESS is the address of the server(the info address will be displayed if the Server runs successfully),  ```PORT``` is the port the server is on, and ```USERNAME``` is the desired username for the server. 
 
 If another client is already connected to the server with the same username, the user will be prompted to put in another username. To send messages, the client is prompted for the username they want to send the message to, and then prompted again for the message they want to send. If there are any difficulties delivering the message, the server will send an error message back.
 
