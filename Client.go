@@ -47,7 +47,7 @@ func MessageCreation(username string) (message Message) {
 	return
 }
 
-func ConnectToChatRoom(port string, username string) {
+func ConnectToChatRoom(port string, username string) net.Conn {
 	Port := ":" + port
 	connection, err := net.Dial("tcp", Port)
 	ConnectionError := "The provided Port Number is incorrect, please try again"
@@ -57,7 +57,7 @@ func ConnectToChatRoom(port string, username string) {
 	encoder.Encode(UserInfo)
 	fmt.Printf("Current Client has been successfully registered, username:%s, port, %s", username, port)
 	defer connection.Close()
-
+	return connection
 }
 
 func sendMessage(conn net.Conn, message Message) {
@@ -77,8 +77,25 @@ func receiveMessage(conn net.Conn, username string, message Message) {
 			os.Exit(0)
 		}
 		fmt.Println("_______________")
-		fmt.Printf("Message is from %s, following is the content\n", message.From)
-		fmt.Printf("%s\n", message.MessageContent)
+		fmt.Printf("Message received from %s, following is the content\n", message.From)
+		fmt.Printf("%s\n")
 		fmt.Println("_______________")
 	}
+}
+
+func main() {
+	//Command Line inputs to gather client information
+	port, username := UserInitialization()
+	//send the client information to the actual server
+	Connection := ConnectToChatRoom(port, username)
+	go receiveMessage(Connection, username)
+	fmt.Println("Input of each field of message should be read on seperate lines." +
+		"Enter \"EXIT \" to terminate the running")
+	//The for loop will read the user input on each field of the message content
+	//Will terminate in desired behavior
+	for {
+		message := MessageCreation(username)
+		go sendMessage(Connection, message)
+	}
+
 }
