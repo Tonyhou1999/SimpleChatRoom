@@ -14,6 +14,8 @@ import (
 )
 
 var messageQueue chan Message
+
+// todo make sure mutex makes sense, theres a lot of cases where we add/remove
 var mutex sync.Mutex
 
 // todo resize connSlice when adding stuff
@@ -24,6 +26,7 @@ func sendErr(myMessage Message) {
 	conn, ok := connSlice[myMessage.From]
 	if !ok {
 		fmt.Println("Unable to send error message back to " + myMessage.From)
+		return
 	}
 	//still using gob so can perhaps detect an error
 	encoder, ok := encodeSlice[myMessage.To]
@@ -65,7 +68,7 @@ func SendMessage() {
 	}
 }
 
-func getUsername(conn net.Conn, decoder *gob.Decoder) {
+func getUsername(conn net.Conn, decoder *gob.Decoder) string {
 	var myMessage Message
 	myEncoder := gob.NewEncoder(conn)
 	for {
@@ -90,15 +93,17 @@ func getUsername(conn net.Conn, decoder *gob.Decoder) {
 		encodeSlice[myMessage.From] = myEncoder
 		connSlice[myMessage.From] = conn
 		mutex.Unlock()
-		return
+		fmt.Println("Added user:", myMessage.From)
+		return myMessage.From
 	}
 }
 
 func ClientThread(conn net.Conn) {
 	var myMessage Message
 	decoder := gob.NewDecoder(conn)
-	getUsername(conn, decoder)
-	for {
+	username := getUsername(conn, decoder)
+	_, ok := connSlice[username]
+	for ok != false {
 		err := decoder.Decode(&myMessage)
 		if err != nil && err != io.EOF {
 			myMessage = Message{} //since we don't know where the message is From
@@ -106,30 +111,30 @@ func ClientThread(conn net.Conn) {
 			continue
 		}
 		messageQueue <- myMessage
+		_, ok = connSlice[username]
 	}
 }
 
 // establishConnection refers to the TCP structure that starts building the TCP connection via the port
 func establishConnection(InputPort string) {
-	Port := "127.0.0.1:" + InputPort
-	listener, err := net.Listen("tcp4", Port)
+	Address := "127.0.0.1:" + InputPort
+	listener, err := net.Listen("tcp4", Address)
 	ConnectionError := "The provided Port Number is incorrect, exiting"
 	CheckPanic(err, ConnectionError) //Here's the error checking part
 	fmt.Println("Successfully started listening at " + listener.Addr().String())
 	go SendMessage()
 	for {
-		connection, error := listener.Accept()
-		Check(error, "Please retry connection, there's an error here")
+		connection, err := listener.Accept()
+		Check(err, "Please retry connection, there's an error here")
 		go ClientThread(connection)
 	}
 }
 
 func endConnections() {
+	endMessage := Message{"chatroom", "chatroom", "EXIT"} //the To doesn't matter here
 	for username := range connSlice {
-		err := connSlice[username].Close()
-		if err != nil {
-			fmt.Println("Unable to close connection with", username)
-		}
+		endMessage.To = username
+		messageQueue <- endMessage
 	}
 }
 
