@@ -25,7 +25,7 @@ func UserInitialization() (chatroom string, username string) {
 		panic("The input is not correctly formatted. Type \"go run Client.go [chatroom number] [your desired username]\"")
 	}
 	//Now we need to check if the username is some reserved keywords. such as chatroom will be prohibited
-	if strings.ToLower(os.Args[1]) == "chatroom" {
+	if strings.ToLower(os.Args[2]) == "chatroom" {
 		panic("The word chatroom is reserved for server use and can not be any part of the username")
 	}
 	chatroom, username = os.Args[1], os.Args[2]

@@ -116,7 +116,7 @@ func ClientThread(conn net.Conn) {
 		if err != nil && err != io.EOF {
 			myMessage = Message{} //since we don't know where the message is From
 			//fmt.Println("Err here:", err)
-			sendErr(myMessage)
+			break
 		} else {
 			fmt.Println("Got message of:\n", myMessage)
 			messageQueue <- myMessage
