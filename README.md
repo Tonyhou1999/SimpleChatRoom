@@ -10,7 +10,7 @@ The goal is to create a simple chat room that supports private messages between 
 
 To run the ChatRoom, do ```./ChatRoom PORT```, where PORT is a valid port number. 
 
-The server will then start up. To close the server, type "EXIT"
+The server will then start up. To close the server, type "EXIT". In addition, typing Ctrl-C will also be read as terminating the connection to the server. 
 
 To run the Client, do ```./Client ADDRESS PORT USERNAME```, where ADDRESS is the address of the server(the info address will be displayed if the Server runs successfully),  ```PORT``` is the port the server is on, and ```USERNAME``` is the desired username for the server. 
 
