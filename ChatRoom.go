@@ -45,7 +45,8 @@ func SendMessage() {
 	for {
 		myMessage = <-messageQueue
 		//todo make sure dont have to error check that myMessage.To will return non-nil
-		fmt.Println("Sending message of ", myMessage)
+		fmt.Println("Sending message to", myMessage)
+		fmt.Println("_______________")
 		conn, ok := connSlice[myMessage.To]
 		if !ok {
 			sendErr(myMessage)
@@ -124,6 +125,7 @@ func ClientThread(conn net.Conn) {
 			break
 		} else {
 			fmt.Println("Got message of:\n", myMessage)
+			fmt.Println("_______________")
 			messageQueue <- myMessage
 		}
 		_, ok = connSlice[username]
