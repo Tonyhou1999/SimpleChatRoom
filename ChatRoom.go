@@ -117,12 +117,19 @@ func establishConnection(InputPort string) {
 	CheckPanic(err, ConnectionError) //Here's the error checking part
 	fmt.Println("Successfully started listening at " + listener.Addr().String())
 	go SendMessage()
-	defer listener.Close()
 	for {
 		connection, error := listener.Accept()
 		Check(error, "Please retry connection, there's an error here")
-		fmt.Println(connection) //This is just for placeholder
 		go ClientThread(connection)
+	}
+}
+
+func endConnections() {
+	for username := range connSlice {
+		err := connSlice[username].Close()
+		if err != nil {
+			fmt.Println("Unable to close connection with", username)
+		}
 	}
 }
 
@@ -133,6 +140,8 @@ func waitForEnd() {
 		scanner.Scan()
 		if scanner.Text() == "EXIT" {
 			fmt.Println("Chatroom will be terminated shortly")
+			endConnections()
+			fmt.Println("All connections closed, exiting")
 			os.Exit(0)
 		}
 	}
