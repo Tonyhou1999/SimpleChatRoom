@@ -41,6 +41,10 @@ func getInput(field string) (obtained string) {
 	return
 }
 
+/*
+This is used to initialize the message struct when the user is trying to send any information to the other client connected to server
+Note from is evident so the user only needs to supply destination and message content, supplying EXIT at any, will cause disconnection to server, as suggested
+*/
 func MessageCreation(username string) (message Message) {
 	to := getInput("To: ")
 	info := getInput("Message: ")
@@ -52,6 +56,9 @@ func MessageCreation(username string) (message Message) {
 	return
 }
 
+/*
+The goal of this function is to provide the client to have access to the chatroom server, very similar to what we did for MP1
+*/
 func ConnectToChatRoom(address string, username string) net.Conn {
 	connection, err := net.Dial("tcp", address)
 	ConnectionError := "Not able to connect to the provided address, double check your address"
@@ -62,7 +69,9 @@ func ConnectToChatRoom(address string, username string) net.Conn {
 		UserInfo := Message{To: "chatroom", From: username, MessageContent: ""}
 		encoder.Encode(UserInfo)
 		err := decoder.Decode(&UserInfo)
-		Check(err, "Unable to receive response from server")
+		Check(err, "Unable to receive response from server") //This is to make sure that the userinfo is received by the server
+
+		//Detail on the username verification should check out ChatRoom.go file
 		if err != nil {
 			fmt.Println()
 		}

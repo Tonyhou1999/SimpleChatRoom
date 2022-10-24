@@ -70,23 +70,31 @@ func SendMessage() {
 	}
 }
 
+//This is the part on getting the username and validate it before completely allow the user to sign up officially
+
 func getUsername(conn net.Conn, decoder *gob.Decoder) string {
 	var myMessage Message
 	myEncoder := gob.NewEncoder(conn)
 	for {
 		err := decoder.Decode(&myMessage)
+
+		//Decode error will return the following code block
 		if err != nil {
 			errMessage := Message{To: myMessage.From, From: "chatroom",
 				MessageContent: "Unable to parse message, please try again"}
 			myEncoder.Encode(errMessage)
 			continue
 		}
+
+		//Some key word restrictions on the username, chatroom is only served for the ChatRoom server and can not be used by any clients
 		if myMessage.To != "chatroom" {
 			errMessage := Message{To: myMessage.From, From: "chatroom",
 				MessageContent: "Please input a username, by sending a message to \"chatroom\" with a unique username"}
 			myEncoder.Encode(errMessage)
 			continue
 		}
+
+		//Reading the information about the username, check the uniqueness of the username,  two disntinct clients must not share the same username
 		_, hasVal := encodeSlice[myMessage.From]
 		if hasVal {
 			errMessage := Message{To: myMessage.From, From: "chatroom",
@@ -94,6 +102,8 @@ func getUsername(conn net.Conn, decoder *gob.Decoder) string {
 			myEncoder.Encode(errMessage)
 			continue
 		}
+
+		//All the communication is taking in forms of a Message Struct, so MessageContent is the part being modified , with the desired information
 		successMessage := Message{To: myMessage.From, From: "chatroom", MessageContent: "USERNAME ACCEPTED"}
 		err = myEncoder.Encode(successMessage)
 		Check(err, "Unable to encode to client while negotiating username")
@@ -148,6 +158,7 @@ func establishConnection(InputPort string) {
 	}
 }
 
+// Function to terminate the connection to the server, typing EXIT at any field of the message will result in a disconnection to the server
 func endConnections() {
 	endMessage := Message{"chatroom", "chatroom", "EXIT"} //the To doesn't matter here
 	for username := range connSlice {
@@ -156,6 +167,10 @@ func endConnections() {
 	}
 }
 
+/*
+This is the function that the Server uses to automatically closes the connection, while the above is the termination
+the server will keep running, but the server has the power to termiante all connection at any point, which is what this function is designed for
+*/
 func waitForEnd() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for {
