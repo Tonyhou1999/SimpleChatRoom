@@ -113,9 +113,14 @@ func ClientThread(conn net.Conn) {
 	for ok != false {
 		err := decoder.Decode(&myMessage)
 		fmt.Println("whee")
+		booleanChecked := false
 		if err != nil && err != io.EOF {
 			myMessage = Message{} //since we don't know where the message is From
 			//fmt.Println("Err here:", err)
+			sendErr(myMessage)
+			booleanChecked = true
+		}
+		if err != io.EOF && booleanChecked == true {
 			break
 		} else {
 			fmt.Println("Got message of:\n", myMessage)
