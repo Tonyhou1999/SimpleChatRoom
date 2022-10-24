@@ -3,14 +3,17 @@ package main
 // This file is used to create a chatroom that supports the messaging
 
 import (
+	. "SimpleChatRoom/pkg/utils"
 	"bufio"
 	"encoding/gob"
 	"fmt"
 	"net"
 	"os"
+	"sync"
 )
 
 var messageQueue chan Message
+var mutex sync.Mutex
 var connSlice map[string]net.Conn
 var encodeSlice map[string]*gob.Encoder //so don't create a new encoder each time
 
@@ -48,8 +51,10 @@ func SendMessage() {
 			}
 			err := encoder.Encode(myMessage)
 			if err != nil {
+				mutex.Lock()
 				delete(connSlice, myMessage.To)
 				delete(encodeSlice, myMessage.To)
+				mutex.Unlock()
 				SendErr(myMessage)
 				continue
 			}
@@ -78,8 +83,10 @@ func getUsername(conn net.Conn, decoder *gob.Decoder) {
 				"The username:\"" + myMessage.From + "\"is already taken, try another username"}
 			myEncoder.Encode(errMessage)
 		}
+		mutex.Lock()
 		encodeSlice[myMessage.From] = myEncoder
 		connSlice[myMessage.From] = conn
+		mutex.Unlock()
 		return
 	}
 }
@@ -104,13 +111,13 @@ func EstablishConnection(InputPort string) {
 	Port := ":" + InputPort
 	listener, err := net.Listen("tcp", Port)
 	ConnectionError := "The provided Port Number is incorrect, please try again"
-	check(err, ConnectionError) //Here's the error checking part
+	Check(err, ConnectionError) //Here's the error checking part
 	fmt.Println("Successfully started listening on port" + Port)
 	go SendMessage()
 	defer listener.Close()
 	for {
 		connection, error := listener.Accept()
-		check(error, "Please retry connection, there's an error here")
+		Check(error, "Please retry connection, there's an error here")
 		fmt.Println(connection) //This is just for placeholder
 		go ClientThread(connection)
 	}

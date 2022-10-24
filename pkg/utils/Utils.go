@@ -1,0 +1,22 @@
+package utils
+
+// required by the instruction, a message of this format will be created
+import "fmt"
+
+type Message struct {
+	To             string
+	From           string
+	MessageContent string
+}
+
+func Check(err error, message string) {
+	if err != nil {
+		fmt.Println(message)
+	}
+}
+
+func CheckPanic(err error, message string) {
+	if err != nil {
+		panic(message)
+	}
+}
