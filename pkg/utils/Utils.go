@@ -1,6 +1,5 @@
 package utils
 
-// required by the instruction, a message of this format will be created
 import "fmt"
 
 type Message struct {

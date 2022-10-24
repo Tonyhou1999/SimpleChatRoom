@@ -17,7 +17,7 @@ var mutex sync.Mutex
 var connSlice map[string]net.Conn
 var encodeSlice map[string]*gob.Encoder //so don't create a new encoder each time
 
-func SendErr(myMessage Message) {
+func sendErr(myMessage Message) {
 	conn, ok := connSlice[myMessage.From]
 	if !ok {
 		fmt.Println("Unable to send error message back to " + myMessage.From)
@@ -41,7 +41,7 @@ func SendMessage() {
 		//todo make sure dont have to error check that myMessage.To will return non-nil
 		conn, ok := connSlice[myMessage.To]
 		if !ok {
-			SendErr(myMessage)
+			sendErr(myMessage)
 			continue
 		} else {
 			encoder, ok := encodeSlice[myMessage.To]
@@ -55,7 +55,7 @@ func SendMessage() {
 				delete(connSlice, myMessage.To)
 				delete(encodeSlice, myMessage.To)
 				mutex.Unlock()
-				SendErr(myMessage)
+				sendErr(myMessage)
 				continue
 			}
 		}
@@ -99,20 +99,20 @@ func ClientThread(conn net.Conn) {
 		err := decoder.Decode(&myMessage)
 		if err != nil {
 			myMessage = Message{} //since we don't know where the message is From
-			SendErr(myMessage)
+			sendErr(myMessage)
 			continue
 		}
 		messageQueue <- myMessage
 	}
 }
 
-// EstablishConnection refers to the TCP structure that starts building the TCP connection via the port
-func EstablishConnection(InputPort string) {
+// establishConnection refers to the TCP structure that starts building the TCP connection via the port
+func establishConnection(InputPort string) {
 	Port := ":" + InputPort
-	listener, err := net.Listen("tcp", Port)
-	ConnectionError := "The provided Port Number is incorrect, please try again"
-	Check(err, ConnectionError) //Here's the error checking part
-	fmt.Println("Successfully started listening on port" + Port)
+	listener, err := net.Listen("tcp4", Port)
+	ConnectionError := "The provided Port Number is incorrect, exiting"
+	CheckPanic(err, ConnectionError) //Here's the error checking part
+	fmt.Println("Successfully started listening at " + listener.Addr().String())
 	go SendMessage()
 	defer listener.Close()
 	for {
@@ -139,6 +139,6 @@ func main() {
 	if len(os.Args) < 2 {
 		panic("Incorrect args: should be ./[PROGNAME] port")
 	}
-	go EstablishConnection(os.Args[1])
+	go establishConnection(os.Args[1])
 	waitForEnd()
 }
