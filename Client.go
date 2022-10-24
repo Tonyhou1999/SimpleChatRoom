@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"encoding/gob"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"strings"
@@ -54,8 +55,7 @@ func ConnectToChatRoom(address string, username string) net.Conn {
 	UserInfo := Message{To: "chatroom", From: username, MessageContent: ""}
 	encoder := gob.NewEncoder(connection)
 	encoder.Encode(UserInfo)
-	fmt.Printf("Current Client has been successfully registered, username:%s, address:%s", username, address)
-	defer connection.Close()
+	fmt.Printf("Current Client has been successfully registered, username:%s, address:%s\n", username, address)
 	return connection
 }
 
@@ -71,9 +71,10 @@ func receiveMessage(conn net.Conn, username string) {
 	var message Message
 	for {
 		decoder := gob.NewDecoder(conn)
-		err := decoder.Decode(message)
+		err := decoder.Decode(&message)
 		Check(err, "Server has closed")
-		if err != nil {
+		if err != nil && err != io.EOF {
+			fmt.Println("Error here: ", err)
 			os.Exit(0)
 		}
 		fmt.Println("_______________")
@@ -90,7 +91,7 @@ func main() {
 	Connection := ConnectToChatRoom(port, username)
 	go receiveMessage(Connection, username)
 	fmt.Println("Input of each field of message should be read on separate lines." +
-		"Enter \"EXIT \" to terminate the running")
+		" Enter \"EXIT \" to terminate the process")
 	//The for loop will read the user input on each field of the message content
 	//Will terminate in desired behavior
 	for {
