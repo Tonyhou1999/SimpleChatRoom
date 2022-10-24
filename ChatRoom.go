@@ -78,17 +78,20 @@ func getUsername(conn net.Conn, decoder *gob.Decoder) string {
 			errMessage := Message{To: myMessage.From, From: "chatroom",
 				MessageContent: "Unable to parse message, please try again"}
 			myEncoder.Encode(errMessage)
+			continue
 		}
 		if myMessage.To != "chatroom" {
 			errMessage := Message{To: myMessage.From, From: "chatroom",
 				MessageContent: "Please input a username, by sending a message to \"chatroom\" with a unique username"}
 			myEncoder.Encode(errMessage)
+			continue
 		}
-		_, hasVal := encodeSlice[myMessage.To]
+		_, hasVal := encodeSlice[myMessage.From]
 		if hasVal {
 			errMessage := Message{To: myMessage.From, From: "chatroom",
 				MessageContent: "The username:\"" + myMessage.From + "\"is already taken, try another username"}
 			myEncoder.Encode(errMessage)
+			continue
 		}
 		mutex.Lock()
 		encodeSlice[myMessage.From] = myEncoder
@@ -109,7 +112,7 @@ func ClientThread(conn net.Conn) {
 		fmt.Println("whee")
 		if err != nil && err != io.EOF {
 			myMessage = Message{} //since we don't know where the message is From
-			fmt.Println("Err here:", err)
+			//fmt.Println("Err here:", err)
 			sendErr(myMessage)
 		} else {
 			fmt.Println("Got message of:\n", myMessage)
