@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"encoding/gob"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"sync"
@@ -14,8 +15,10 @@ import (
 
 var messageQueue chan Message
 var mutex sync.Mutex
-var connSlice map[string]net.Conn
-var encodeSlice map[string]*gob.Encoder //so don't create a new encoder each time
+
+// todo resize connSlice when adding stuff
+var connSlice map[string]net.Conn = make(map[string]net.Conn, 10)
+var encodeSlice map[string]*gob.Encoder = make(map[string]*gob.Encoder, 10) //so don't create a new encoder each time
 
 func sendErr(myMessage Message) {
 	conn, ok := connSlice[myMessage.From]
@@ -97,7 +100,7 @@ func ClientThread(conn net.Conn) {
 	getUsername(conn, decoder)
 	for {
 		err := decoder.Decode(&myMessage)
-		if err != nil {
+		if err != nil && err != io.EOF {
 			myMessage = Message{} //since we don't know where the message is From
 			sendErr(myMessage)
 			continue
