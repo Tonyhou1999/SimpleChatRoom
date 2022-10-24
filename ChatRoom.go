@@ -29,12 +29,13 @@ func sendErr(myMessage Message) {
 		return
 	}
 	//still using gob so can perhaps detect an error
-	encoder, ok := encodeSlice[myMessage.To]
+	encoder, ok := encodeSlice[myMessage.From]
 	if !ok {
 		encoder = gob.NewEncoder(conn)
-		encodeSlice[myMessage.To] = encoder
+		encodeSlice[myMessage.From] = encoder
 	}
-	err := encoder.Encode("Unable to send message to " + myMessage.To)
+	myMessage.MessageContent = "Unable to send message to " + myMessage.From
+	err := encoder.Encode(myMessage)
 	if err != nil {
 		fmt.Println("Unable to send error message back to " + myMessage.From)
 	}
@@ -93,7 +94,12 @@ func getUsername(conn net.Conn, decoder *gob.Decoder) string {
 			myEncoder.Encode(errMessage)
 			continue
 		}
-
+		if myMessage.From == "chatroom" {
+			errMessage := Message{To: myMessage.From, From: "chatroom",
+				MessageContent: "Your username cannot be chatroom"}
+			myEncoder.Encode(errMessage)
+			continue
+		}
 		//Reading the information about the username, check the uniqueness of the username,  two disntinct clients must not share the same username
 		_, hasVal := encodeSlice[myMessage.From]
 		if hasVal {
@@ -123,21 +129,15 @@ func ClientThread(conn net.Conn) {
 	_, ok := connSlice[username]
 	for ok != false {
 		err := decoder.Decode(&myMessage)
-		fmt.Println("whee")
-		booleanChecked := false
 		if err != nil && err != io.EOF {
 			myMessage = Message{} //since we don't know where the message is From
 			//fmt.Println("Err here:", err)
-			sendErr(myMessage)
-			booleanChecked = true
-		}
-		if err != io.EOF && booleanChecked == true {
+			//sendErr(myMessage)
 			break
-		} else {
-			fmt.Println("Got message of:\n", myMessage)
-			fmt.Println("_______________")
-			messageQueue <- myMessage
 		}
+		fmt.Println("Got message of:\n", myMessage)
+		fmt.Println("_______________")
+		messageQueue <- myMessage
 		_, ok = connSlice[username]
 	}
 	fmt.Println("Closed connection with", username)

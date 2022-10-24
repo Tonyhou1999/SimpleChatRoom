@@ -59,7 +59,7 @@ func MessageCreation(username string) (message Message) {
 /*
 The goal of this function is to provide the client to have access to the chatroom server, very similar to what we did for MP1
 */
-func ConnectToChatRoom(address string, username string) net.Conn {
+func ConnectToChatRoom(address string, username string) (net.Conn, string) {
 	connection, err := net.Dial("tcp", address)
 	ConnectionError := "Not able to connect to the provided address, double check your address"
 	CheckPanic(err, ConnectionError) //Make sure it is a valid port number, i.e, the destination chatroom, exists
@@ -83,7 +83,7 @@ func ConnectToChatRoom(address string, username string) net.Conn {
 		}
 	}
 	fmt.Printf("Current Client has been successfully registered, username:%s, address:%s\n", username, address)
-	return connection
+	return connection, username
 }
 
 func sendMessage(encoder *gob.Encoder, message Message) {
@@ -119,7 +119,7 @@ func main() {
 	//Command Line arguments to gather client information
 	port, username := UserInitialization()
 	//send the client information to the actual server
-	Connection := ConnectToChatRoom(port, username)
+	Connection, username := ConnectToChatRoom(port, username)
 	go receiveMessage(Connection, username)
 	fmt.Println("Input of each field of message should be read on separate lines." +
 		" Enter \"EXIT \" to terminate the process")
