@@ -74,19 +74,19 @@ func getUsername(conn net.Conn, decoder *gob.Decoder) string {
 	for {
 		err := decoder.Decode(&myMessage)
 		if err != nil {
-			errMessage := Message{myMessage.From, "chatroom",
-				"Unable to parse message, please try again"}
+			errMessage := Message{To: myMessage.From, From: "chatroom",
+				MessageContent: "Unable to parse message, please try again"}
 			myEncoder.Encode(errMessage)
 		}
 		if myMessage.To != "chatroom" {
-			errMessage := Message{myMessage.From, "chatroom",
-				"Please input a username, by sending a message to \"chatroom\" with a unique username"}
+			errMessage := Message{To: myMessage.From, From: "chatroom",
+				MessageContent: "Please input a username, by sending a message to \"chatroom\" with a unique username"}
 			myEncoder.Encode(errMessage)
 		}
 		_, hasVal := encodeSlice[myMessage.To]
 		if hasVal {
-			errMessage := Message{myMessage.From, "chatroom",
-				"The username:\"" + myMessage.From + "\"is already taken, try another username"}
+			errMessage := Message{To: myMessage.From, From: "chatroom",
+				MessageContent: "The username:\"" + myMessage.From + "\"is already taken, try another username"}
 			myEncoder.Encode(errMessage)
 		}
 		mutex.Lock()

@@ -77,6 +77,12 @@ func receiveMessage(conn net.Conn, username string) {
 			fmt.Println("Error here: ", err)
 			os.Exit(0)
 		}
+		
+		//This is the case to check if the client receives the EXIT sign from the server, it shall terminte shortly also
+		if message.From == "chatroom" && message.MessageContent == "EXIT" {
+			fmt.Println("Server will terminate the connection shortly")
+			os.Exit(0)
+		}
 		fmt.Println("_______________")
 		fmt.Printf("Message received from %s, following is the content\n", message.From)
 		fmt.Printf("%s\n")
