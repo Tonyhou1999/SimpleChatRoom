@@ -20,7 +20,7 @@ If another client is already connected to the server with the same username, the
 - ChatRoom.go: This is the chatroom server, that handles all the client connections and passes on messages. There are the following threads:
   - One thread reads command-line input waiting for the user to type exit EXIT
   - One thread listens for new connections, which generates one thread per connection
-  - One thread per connection, which reads new messages and passes them to a channel
+  - n threads, where n is the number of connections, which read new messages from a connection and passes them to a channel
   - One thread total sends messages to the clients
 - Utils.go: This saves shared structs and functions
 - Client.go: This is the client, which connects to the chatroom and sends and recieves messages from the chatroom.
@@ -29,16 +29,10 @@ If another client is already connected to the server with the same username, the
   - Then the client sends messages until it receives EXIT
 
 ## Explanation of Design
-As the requirement suggested, there are two sides that we need to consider 
-- Server Side
-   - The server is designed to have the following algorithm for designing "algorithm"
-      - 1: Like Last Homework, first will intialize the TCP Connection via the given port(Listening to TCP connection)
-      - 2: It will accept a connection from any other client process by first checking the uniqueness of the name and make sure the name is validated(the goal of function getUsername and sendErr)
-      - 3: The server will send the message to the desired destination specified in the message 
-      - 4: The server will terminate if the user enter EXIT at any point when asked for userinput. 
-- Client Side
-    - Client Side works in a similar but opposite way compared to the Server side.
-       - 1: The Client will input the tcp port and the username, such information is gathered to send to the Server. To validate this step, Server class is also equipped with a function to check the uniqueness
-       - 2: If proper TCP Port provided, with custom username, then Client will connect to the chatroom via TCP
-       - 3: The Client will keep dialing to TCP connection to send message, and will exit if the user prompt when asked.
-       
+Here are a few particular aspects of our design we wanted to explain in more detail.
+### Server Side
+- We save the connections within a slice to keep track of them
+- There is a mutex whenever we set the username, to prevent race conditions. We do not use the mutex whenever we delete connections, as the delete operation is idempotent.
+- A new thread is created for each connection, as reads are blocking
+### Client Side
+- The client checks for a few reserved usernames, such as chatroom, and will print an error message if that occurs. This is in addition to the server-side checking, just to make it let the user know quicker their username does not work.
