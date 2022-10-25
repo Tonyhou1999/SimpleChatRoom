@@ -63,7 +63,7 @@ func ConnectToChatRoom(address string, username string) (net.Conn, string) {
 		UserInfo := Message{To: "chatroom", From: username, MessageContent: ""}
 		encoder.Encode(UserInfo)
 		err := decoder.Decode(&UserInfo)
-		Check(err, "Unable to receive response from server") //This is to make sure that the userinfo is received by the server
+		Check(err, "Unable to receive response from server. Server may have closed") //This is to make sure that the userinfo is received by the server
 
 		//Detail on the username verification should check out ChatRoom.go file
 		if UserInfo.MessageContent == "USERNAME ACCEPTED" {
@@ -111,8 +111,8 @@ func main() {
 	//send the client information to the actual server
 	Connection, username := ConnectToChatRoom(port, username)
 	go receiveMessage(Connection, username)
-	fmt.Println("Input of each field of message should be read on separate lines." +
-		" Enter \"EXIT \" to terminate the process")
+	fmt.Println("Input of each field of message should be read on separate lines.\n" +
+		"Enter \"EXIT \" to terminate the process")
 	//The for loop will read the user input on each field of the message content
 	//Will terminate in desired behavior
 	for {
