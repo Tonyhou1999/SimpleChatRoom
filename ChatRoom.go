@@ -10,12 +10,11 @@ import (
 	"io"
 	"net"
 	"os"
+	"strings"
 	"sync"
 )
 
 var messageQueue chan Message = make(chan Message, 5)
-
-// todo make sure mutex makes sense, theres a lot of cases where we add/remove
 var mutex sync.Mutex
 
 // todo resize connSlice when adding stuff
@@ -31,23 +30,19 @@ func sendErr(myMessage Message) {
 	//still using gob so can perhaps detect an error
 	encoder, ok := encodeSlice[myMessage.From]
 	if !ok {
+		//this shouldn't happen, but just in case
 		encoder = gob.NewEncoder(conn)
 		encodeSlice[myMessage.From] = encoder
 	}
 	myMessage.MessageContent = "Unable to send message to " + myMessage.From
 	err := encoder.Encode(myMessage)
-	if err != nil {
-		fmt.Println("Unable to send error message back to " + myMessage.From)
-	}
+	Check(err, "Unable to send error message back to "+myMessage.From)
 }
 
 func SendMessage() {
 	var myMessage Message
 	for {
 		myMessage = <-messageQueue
-		//todo make sure dont have to error check that myMessage.To will return non-nil
-		fmt.Println("Sending message to", myMessage)
-		fmt.Println("_______________")
 		conn, ok := connSlice[myMessage.To]
 		if !ok {
 			sendErr(myMessage)
@@ -55,15 +50,14 @@ func SendMessage() {
 		} else {
 			encoder, ok := encodeSlice[myMessage.To]
 			if !ok {
+				//this shouldn't happen, but just in case
 				encoder = gob.NewEncoder(conn)
 				encodeSlice[myMessage.To] = encoder
 			}
 			err := encoder.Encode(myMessage)
 			if err != nil {
-				mutex.Lock()
 				delete(connSlice, myMessage.To)
 				delete(encodeSlice, myMessage.To)
-				mutex.Unlock()
 				sendErr(myMessage)
 				continue
 			}
@@ -71,8 +65,7 @@ func SendMessage() {
 	}
 }
 
-//This is the part on getting the username and validate it before completely allow the user to sign up officially
-
+// This is the part on getting the username and validate it before completely allow the user to sign up officially
 func getUsername(conn net.Conn, decoder *gob.Decoder) string {
 	var myMessage Message
 	myEncoder := gob.NewEncoder(conn)
@@ -94,15 +87,17 @@ func getUsername(conn net.Conn, decoder *gob.Decoder) string {
 			myEncoder.Encode(errMessage)
 			continue
 		}
-		if myMessage.From == "chatroom" {
+		if myMessage.From == "chatroom" || strings.ToLower(myMessage.From) == "exit" {
 			errMessage := Message{To: myMessage.From, From: "chatroom",
-				MessageContent: "Your username cannot be chatroom"}
+				MessageContent: "Your username cannot be" + myMessage.From}
 			myEncoder.Encode(errMessage)
 			continue
 		}
-		//Reading the information about the username, check the uniqueness of the username,  two disntinct clients must not share the same username
-		_, hasVal := encodeSlice[myMessage.From]
+		//Reading the information about the username, check the uniqueness of the username,  two distinct clients must not share the same username
+		mutex.Lock()
+		_, hasVal := connSlice[myMessage.From]
 		if hasVal {
+			mutex.Unlock() //unlock it early, since we have the continue
 			errMessage := Message{To: myMessage.From, From: "chatroom",
 				MessageContent: "The username:\"" + myMessage.From + "\"is already taken, try another username"}
 			myEncoder.Encode(errMessage)
@@ -113,7 +108,6 @@ func getUsername(conn net.Conn, decoder *gob.Decoder) string {
 		successMessage := Message{To: myMessage.From, From: "chatroom", MessageContent: "USERNAME ACCEPTED"}
 		err = myEncoder.Encode(successMessage)
 		Check(err, "Unable to encode to client while negotiating username")
-		mutex.Lock()
 		encodeSlice[myMessage.From] = myEncoder
 		connSlice[myMessage.From] = conn
 		mutex.Unlock()
@@ -130,14 +124,13 @@ func ClientThread(conn net.Conn) {
 	for ok != false {
 		err := decoder.Decode(&myMessage)
 		if err != nil && err != io.EOF {
-			myMessage = Message{} //since we don't know where the message is From
-			//fmt.Println("Err here:", err)
+			//myMessage = Message{} //since we don't know where the message is From
 			//sendErr(myMessage)
-			break
+			delete(connSlice, username)
+			delete(encodeSlice, username)
+		} else {
+			messageQueue <- myMessage
 		}
-		fmt.Println("Got message of:\n", myMessage)
-		fmt.Println("_______________")
-		messageQueue <- myMessage
 		_, ok = connSlice[username]
 	}
 	fmt.Println("Closed connection with", username)

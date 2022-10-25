@@ -11,12 +11,6 @@ import (
 	"strings"
 )
 
-/*
-	connect to the TCP chatroom on client side,
-
-and send the client's username tothe server
-*/
-
 var encoder *gob.Encoder
 var decoder *gob.Decoder
 
@@ -24,9 +18,9 @@ func UserInitialization() (chatroom string, username string) {
 	if len(os.Args) != 3 {
 		panic("The input is not correctly formatted. Type \"go run Client.go [chatroom number] [your desired username]\"")
 	}
-	//Now we need to check if the username is some reserved keywords. such as chatroom will be prohibited
-	if strings.ToLower(os.Args[2]) == "chatroom" {
-		panic("The word chatroom is reserved for server use and can not be any part of the username")
+	//Now we need to check if the username is some reserved keywords, such as chatroom, will be prohibited
+	if strings.ToLower(os.Args[2]) == "chatroom" || strings.ToLower(os.Args[2]) == "exit" {
+		panic("The supplied username is reserved for server use and cannot be the username")
 	}
 	chatroom, username = os.Args[1], os.Args[2]
 	return
@@ -43,7 +37,7 @@ func getInput(field string) (obtained string) {
 
 /*
 This is used to initialize the message struct when the user is trying to send any information to the other client connected to server
-Note from is evident so the user only needs to supply destination and message content, supplying EXIT at any, will cause disconnection to server, as suggested
+Note from is the username so the user only needs to supply destination and message content, supplying EXIT at any, will cause disconnection to server, as suggested
 */
 func MessageCreation(username string) (message Message) {
 	to := getInput("To: ")
@@ -72,9 +66,6 @@ func ConnectToChatRoom(address string, username string) (net.Conn, string) {
 		Check(err, "Unable to receive response from server") //This is to make sure that the userinfo is received by the server
 
 		//Detail on the username verification should check out ChatRoom.go file
-		if err != nil {
-			fmt.Println()
-		}
 		if UserInfo.MessageContent == "USERNAME ACCEPTED" {
 			break
 		} else {
@@ -97,9 +88,8 @@ func receiveMessage(conn net.Conn, username string) {
 	var message Message
 	for {
 		err := decoder.Decode(&message)
-		Check(err, "Server has closed")
 		if err != nil && err != io.EOF {
-			fmt.Println("Error here: ", err)
+			Check(err, "Server has closed")
 			os.Exit(0)
 		}
 
